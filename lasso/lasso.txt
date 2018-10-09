@@ -1,0 +1,16 @@
+#
+# mipow_lasso.txt
+#
+
+cd /home/morii/work/nakamori/ana
+
+
+../data/180924/lcurve_30Hz_dt0.1ms.root
+
+TFile* f = new TFile("../data/180924/lcurve_30Hz_dt0.1ms.root");
+TH1D* h = (TH1D*) f->Get("lcurve");
+
+
+
+source ~/work/github/moriiism/mitool/setup/setup.sh
+
