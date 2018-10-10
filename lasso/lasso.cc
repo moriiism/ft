@@ -74,7 +74,8 @@ int main(int argc, char* argv[]){
                argval->GetTimeUp(),
                &nbin_lc_org, &xlo_lc_org, &xup_lc_org, &delta_lc_org,
                hd1d_lc);
-
+    MirQdpTool::MkQdp(hd1d_lc, "hd1d_lc.qdp", "x,y");
+    
     // load gti light curve 
     long nbin_gti_org  = 0;
     double xlo_gti_org = 0.0;
@@ -86,44 +87,44 @@ int main(int argc, char* argv[]){
                argval->GetTimeUp(),
                &nbin_gti_org, &xlo_gti_org, &xup_gti_org, &delta_gti_org,
                hd1d_gti);
-    MirQdpTool::MkQdp(hd1d_gti, "temp_gti.qdp", "x,y");
+    MirQdpTool::MkQdp(hd1d_gti, "hd1d_gti.qdp", "x,y");
 
     
     double delta_time = hd1d_lc->GetXvalBinWidth();
     // LASSO
-    int ntime = MirMath::GetSum(hd1d_gti->GetOvalArr()->GetNdata(),
-                                hd1d_gti->GetOvalArr()->GetVal());
+    long ntime = MirMath::GetSum(hd1d_gti->GetOvalArr()->GetNdata(),
+                                 hd1d_gti->GetOvalArr()->GetVal());
     double delta_freq = (argval->GetFreqUp() - argval->GetFreqLo()) / argval->GetNfreq();
-    int nrow = ntime;
-    int ncol = 2 * argval->GetNfreq();
+    long nrow = ntime;
+    long ncol = 2 * argval->GetNfreq();
     // FFT
-    int ntime_fft = hd1d_lc->GetNbinX();
+    long ntime_fft = hd1d_lc->GetNbinX();
     double delta_freq_fft = 1.0 / (hd1d_lc->GetXvalUp() - hd1d_lc->GetXvalLo());
     double freq_lo_fft = 0.0;
     double freq_up_fft = 1.0 / (2 * delta_time);
-    int nfreq_fft = ntime_fft / 2;
-    int nrow_fft = ntime_fft;
-    int ncol_fft = ntime_fft;
+    long nfreq_fft = ntime_fft / 2;
+    long nrow_fft = ntime_fft;
+    long ncol_fft = ntime_fft;
 
     printf("delta_time = %e\n", delta_time);
-    printf("ntime = %d\n", ntime);
+    printf("ntime = %ld\n", ntime);
     printf("delta_freq = %e\n", delta_freq);
-    printf("nrow = %d\n", nrow);
-    printf("ncol = %d\n", ncol);
-    printf("ntime_fft = %d\n", ntime_fft);
+    printf("nrow = %ld\n", nrow);
+    printf("ncol = %ld\n", ncol);
+    printf("ntime_fft = %ld\n", ntime_fft);
     printf("delta_freq_fft = %e\n", delta_freq_fft);
     printf("freq_lo_fft = %e\n", freq_lo_fft);
     printf("freq_up_fft = %e\n", freq_up_fft);
-    printf("nfreq_fft = %d\n", nfreq_fft);
-    printf("nrow_fft = %d\n", nrow_fft);
-    printf("ncol_fft = %d\n", ncol_fft);
+    printf("nfreq_fft = %ld\n", nfreq_fft);
+    printf("nrow_fft = %ld\n", nrow_fft);
+    printf("ncol_fft = %ld\n", ncol_fft);
     
 
     // light curve of gti = 1
     GraphDataNerr2d* gd2d_lc = new GraphDataNerr2d;
-    int itime = 0; 
+    long itime = 0; 
     gd2d_lc->Init(ntime);
-    for(int ibin = 0; ibin < hd1d_lc->GetNbinX(); ibin ++){
+    for(long ibin = 0; ibin < hd1d_lc->GetNbinX(); ibin ++){
         if(1 == hd1d_gti->GetOvalElm(ibin)){
             gd2d_lc->SetPoint(itime,
                               hd1d_lc->GetHi1d()->GetBinCenter(ibin),
@@ -131,86 +132,54 @@ int main(int argc, char* argv[]){
             itime ++;
         }
     }
-
-    printf("nbin ntime = %d %ld\n",  hd1d_lc->GetNbinX(), ntime);
+    printf("nbin ntime = %ld %ld\n",  hd1d_lc->GetNbinX(), ntime);
     
     GraphDataNerr2d* gd2d_norm_lc = new GraphDataNerr2d;
     Gd2dNormAndStd(gd2d_lc, gd2d_norm_lc);
     MirQdpTool::MkQdp(gd2d_lc, "lc.qdp", "x,y");
     MirQdpTool::MkQdp(gd2d_norm_lc, "lc_norm.qdp", "x,y");
 
-//    abort();
+    // -------------------------------
+
+    double* power_arr = NULL;
+    double* fft_real_arr = NULL;
+    double* fft_image_arr = NULL;
+    GenFFT(hd1d_lc->GetNbinX(), hd1d_lc->GetOvalArr()->GetVal(),
+           &fft_real_arr, &fft_image_arr, &power_arr);
+
+    FILE* fp = fopen("fft_power.qdp", "w");
+    for(long ipow = 0; ipow < hd1d_lc->GetNbinX() / 2; ipow ++){
+        fprintf(fp, "%ld  %e\n", ipow, power_arr[ipow]);
+    }
+    fclose(fp);
+
+    fp = fopen("fft_real_image.qdp", "w");
+    for(long ipow = 0; ipow < hd1d_lc->GetNbinX() / 2; ipow ++){
+        fprintf(fp, "%ld  %e\n", ipow, fft_real_arr[ipow]);
+    }
+    for(long ipow = 0; ipow < hd1d_lc->GetNbinX() / 2; ipow ++){
+        fprintf(fp, "%ld  %e\n", ipow + hd1d_lc->GetNbinX() / 2, fft_image_arr[ipow]);
+    }    
+    fclose(fp);
+
+    printf("out fft\n");
     
-
-//    // -------------------------------------
-//
-//    long nbin = hd1d_lc->GetNbinX();
-//    long nbin_half = nbin / 2;
-//    
-//    fftw_complex* in = NULL;
-//    fftw_complex* out = NULL;
-//    fftw_plan plan = NULL;
-//    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nbin);
-//    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * nbin);
-//
-//    plan = fftw_plan_dft_1d(nbin, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-//
-//    for(long ibin = 0; ibin < nbin; ibin ++){
-//        in[ibin][0] = 0.0;
-//        in[ibin][1] = 0.0;
-//        out[ibin][0] = 0.0;
-//        out[ibin][1] = 0.0;
-//    }
-//
-//    for(long ibin = 0; ibin < nbin; ibin ++){
-//        in[ibin][0] = hd1d_lc->GetOvalElm(ibin);
-//        in[ibin][1] = 0.0;
-//    }
-//  
-//    fftw_execute(plan);
-//    double* output    = new double [2 * (nbin_half + 1)];
-//    double* out_real  = new double [nbin_half + 1];
-//    double* out_image = new double [nbin_half + 1];
-//  
-//    for(long ibin = 0; ibin < nbin_half + 1; ibin++ ){
-//        out_real[ibin]  = out[ibin][0];
-//        out_image[ibin] = out[ibin][1];
-//    }
-//
-//    fftw_destroy_plan(plan);
-//    fftw_free(in);
-//    fftw_free(out);
-//
-//
-//    // calculate Power Spectrum
-//    double* freq  = new double [nbin_half + 1];
-//    double* power = new double [nbin_half + 1];
-//    double nbin_pow2 = pow(nbin, 2);
-//    freq[0] = 0.0;
-//    power[0] = (pow(out_real[0], 2) + pow(out_image[0], 2)) / nbin_pow2;
-//    for(long ibin = 1; ibin < nbin_half; ibin++){
-//        freq[ibin] = ibin / nbin;
-//        power[ibin] = 2.0 * (pow(out_real[ibin], 2) + pow(out_image[ibin], 2)) / nbin_pow2;
-//
-//        printf("%ld %e\n", ibin, power[ibin]);
-//    }
-//    freq[nbin_half] = 1.0 / 2.0;
-//    power[nbin_half] = (pow(out_real[nbin_half], 2) + pow(out_image[nbin_half], 2)) / nbin_pow2;
-//
-//
-//    // -----------------------------------
-
     double* A_mat_arr = NULL;
-    GenMatLasso(gd2d_norm_lc->GetXvalArr()->GetVal(), ntime,
-                argval->GetFreqLo(), delta_freq, argval->GetNfreq(),
+    //GenMatLasso(gd2d_norm_lc->GetXvalArr()->GetVal(), ntime,
+    //            argval->GetFreqLo(), delta_freq, argval->GetNfreq(),
+    //            &A_mat_arr);
+    GenMatLasso(gd2d_lc->GetXvalArr()->GetVal(), ntime,
+                argval->GetFreqLo(), delta_freq, (long) argval->GetNfreq(),
                 &A_mat_arr);
+    
     double* h_arr = new double [nrow];
-    for(int irow = 0; irow < nrow; irow++){
-        h_arr[irow] = gd2d_norm_lc->GetOvalElm(irow);
+    for(long irow = 0; irow < nrow; irow++){
+        // h_arr[irow] = gd2d_norm_lc->GetOvalElm(irow);
+        h_arr[irow] = gd2d_lc->GetOvalElm(irow);
     }
     double* x_arr = new double [ncol];
     double* y_arr = new double [ncol];
-    for(int icol = 0; icol < ncol; icol++){
+    for(long icol = 0; icol < ncol; icol++){
         x_arr[icol] = 0.0;
         y_arr[icol] = 0.0;
     }
@@ -218,38 +187,62 @@ int main(int argc, char* argv[]){
     double tolerance = 1.0e-10;
     double eta = 1.2;
     double lconst = 1.0e-3;
-    double lconst_pre = lconst;
-    double kiter_max = 500;
+    double kiter_max = 10000;
     double cost = 0.0;
     double cost_pre = cost;
-    for(int kiter = 0; kiter < kiter_max; kiter ++){
-        printf("kiter = %d, cost = %e, lconst = %e\n", kiter, cost, lconst);
-        lconst = GetLconst(A_mat_arr, nrow, ncol,
-                           h_arr, y_arr,
-                           lconst, eta, argval->GetLambda());
+    for(long kiter = 0; kiter < kiter_max; kiter ++){
+        //for(int icol = 0; icol < ncol; icol++){
+        //    x_arr[icol] = 0.0;            
+        //}
+        double lconst_new = GetLconst(A_mat_arr, nrow, ncol,
+                                      h_arr, y_arr,
+                                      lconst, eta, argval->GetLambda());
         GetProxMap(A_mat_arr, nrow, ncol,
                    h_arr,
                    y_arr,
-                   lconst,
+                   lconst_new,
                    argval->GetLambda(),
                    x_arr);
         cost = FGFunc(A_mat_arr, nrow, ncol,
                       h_arr, x_arr, argval->GetLambda());
 
-        printf("ratio = %e\n", (cost_pre - cost) / cost);
+        double ratio_cost_improve = (cost_pre - cost) / cost;
+        printf("kiter = %ld, cost = %e, lconst_new = %e, ratio_cost_improve = %e\n",
+               kiter, cost, lconst_new, ratio_cost_improve);
         
-        if(kiter > 1 && fabs((cost_pre - cost) / cost) < tolerance){
-            printf("kiter = %d, cost = %e\n", kiter, cost);
+        if(kiter > 1 && fabs(ratio_cost_improve) < tolerance){
+            printf("kiter = %ld, cost = %e\n", kiter, cost);
             break;
         }
         dcopy_(ncol, x_arr, 1, y_arr, 1);
         cost_pre = cost;
+        lconst = lconst_new;
     }
 
     HistDataNerr1d* hd1d_lc_in_freq = new HistDataNerr1d;
     hd1d_lc_in_freq->Init(2 * argval->GetNfreq(), argval->GetFreqLo(), argval->GetFreqUp());
     hd1d_lc_in_freq->SetOvalArr(2 * argval->GetNfreq(), x_arr);
-    MirQdpTool::MkQdp(hd1d_lc_in_freq, "lc_in_freq.qdp", "x,y");
+    // MirQdpTool::MkQdp(hd1d_lc_in_freq, "lc_in_freq.qdp", "x,y");
+
+    fp = fopen("lasso_power.qdp", "w");
+    for(long icol = 0; icol < argval->GetNfreq(); icol ++){
+        fprintf(fp, "%ld  %e\n",
+                icol, pow(hd1d_lc_in_freq->GetOvalElm(icol), 2)
+                + pow(hd1d_lc_in_freq->GetOvalElm(icol + argval->GetNfreq()), 2) );
+    }
+    fclose(fp);
+
+    fp = fopen("lasso_real_image.qdp", "w");
+    for(long icol = 0; icol < argval->GetNfreq(); icol ++){
+        fprintf(fp, "%ld  %e\n", icol, hd1d_lc_in_freq->GetOvalElm(icol));
+    }
+    for(long icol = 0; icol < argval->GetNfreq(); icol ++){
+        fprintf(fp, "%ld  %e\n", icol + argval->GetNfreq(),
+                hd1d_lc_in_freq->GetOvalElm(icol + argval->GetNfreq()) );
+    }
+    fclose(fp);
+
+    
     
     delete argval;
     
