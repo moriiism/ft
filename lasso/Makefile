@@ -9,12 +9,16 @@ FFTW3_LIB = -L/soft/fftw/3.3.4/lib -lfftw3
 INCLUDE := $(MIROOTLIB_INC) $(MIBLASLIB_INC) $(MILIB_INC) $(ROOT_INC) $(FFTW3_INC) $(MT_INC)
 LDLIBS  := $(MIROOTLIB_LIB) $(MIBLASLIB_LIB) $(MILIB_LIB) $(ROOT_ALLLIBS) $(FFTW3_LIB) $(BLAS_LIB) $(MT_LIB) $(LIB) -lgfortran
 
-TARGET = lasso
+TARGET = lasso  lasso_fft
 
 all: $(TARGET) 
 
 lasso: lasso.o  arg_lasso.o  sub.o
 	$(CXXN) $@.o arg_$@.o sub.o ${LDLIBS} -o $@
+
+lasso_fft: lasso_fft.o  arg_lasso_fft.o  sub_fft.o
+	$(CXXN) $@.o arg_$@.o sub_fft.o sub.o ${LDLIBS} -o $@
+
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .F .cc
