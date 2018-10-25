@@ -29,6 +29,8 @@ void LoadRootLc(string infile, string tag, double time_lo, double time_up,
     // argval->GetOutdir().c_str(),
     //        argval->GetOutfileHead().c_str());
     //MirQdpTool::MkQdp(hd1d, qdplc, "x,y");
+
+    delete tfile;
     
     *nbin_lc_ptr = nbin_lc;
     *xlo_lc_ptr = xlo_lc;
@@ -312,16 +314,19 @@ void GenFFT(long nbin, const double* const val_arr,
     // calculate Power Spectrum
     double* freq  = new double [nbin_half + 1];
     double* power = new double [nbin_half + 1];
-    double nbin_pow2 = pow(nbin, 2);
+    // double nbin_pow2 = pow(nbin, 2);
     freq[0] = 0.0;
-    power[0] = (pow(out_real[0], 2) + pow(out_image[0], 2)) / nbin_pow2;
+    // power[0] = (pow(out_real[0], 2) + pow(out_image[0], 2)) / nbin_pow2;
+    power[0] = pow(out_real[0], 2) + pow(out_image[0], 2);
     for(long ibin = 1; ibin < nbin_half; ibin++){
         freq[ibin] = ibin / nbin;
-        power[ibin] = 2.0 * (pow(out_real[ibin], 2) + pow(out_image[ibin], 2)) / nbin_pow2;
+        //power[ibin] = 2.0 * (pow(out_real[ibin], 2) + pow(out_image[ibin], 2)) / nbin_pow2;
+        power[ibin] = pow(out_real[ibin], 2) + pow(out_image[ibin], 2);
         // printf("%ld %e\n", ibin, power[ibin]);
     }
     freq[nbin_half] = 1.0 / 2.0;
-    power[nbin_half] = (pow(out_real[nbin_half], 2) + pow(out_image[nbin_half], 2)) / nbin_pow2;
+    // power[nbin_half] = (pow(out_real[nbin_half], 2) + pow(out_image[nbin_half], 2)) / nbin_pow2;
+    power[nbin_half] = pow(out_real[nbin_half], 2) + pow(out_image[nbin_half], 2);
 
     delete [] output;
     delete [] out_real;

@@ -122,7 +122,7 @@ int main(int argc, char* argv[]){
     // light curve of gti = 1
     GraphDataNerr2d* gd2d_lc = new GraphDataNerr2d;
     // index of gti = 1
-    int* index_arr = new int [ntime];
+    long* index_arr = new long [ntime];
     long itime = 0; 
     gd2d_lc->Init(ntime);
     for(long ibin = 0; ibin < hd1d_lc->GetNbinX(); ibin ++){

@@ -2,7 +2,7 @@
 #include "sub.h"
 
 void GetProxMapFft(const double* const h_arr, long nrow,
-                   const int* const index_arr, // nrow
+                   const long* const index_arr, // nrow
                    const double* const y_arr, long ncol,
                    double delta_freq,
                    double lconst,
@@ -30,7 +30,7 @@ void GetProxMapFft(const double* const h_arr, long nrow,
 }
 
 double QFuncFft(const double* const h_arr, long nrow,
-                const int* const index_arr, // nrow
+                const long* const index_arr, // nrow
                 const double* const x_arr, long ncol,
                 const double* const y_arr, // ncol
                 double delta_freq,
@@ -62,7 +62,7 @@ double QFuncFft(const double* const h_arr, long nrow,
 }
 
 void DiffFFuncFft(const double* const h_arr, long nrow,
-                  const int* const index_arr, // nrow
+                  const long* const index_arr, // nrow
                   const double* const x_arr, long ncol,
                   double delta_freq,
                   double* const out_arr) // ncol
@@ -97,12 +97,12 @@ void DiffFFuncFft(const double* const h_arr, long nrow,
     //dgemv_(trans2, nrow, ncol, 2.0, const_cast<double*>(A_mat_arr), nrow,
     //       tmp_arr, 1,
     //       1.0, out_arr, 1);
-    // delete [] tmp_arr;
 
+    delete [] tmp_arr;
 }
 
 double FFuncFft(const double* const h_arr, long nrow,
-                const int* const index_arr, // nrow
+                const long* const index_arr, // nrow
                 const double* const x_arr, long ncol,
                 double delta_freq)
                 
@@ -138,7 +138,7 @@ double GFuncFft(const double* const x_arr, long ncol, double lambda)
 }
 
 double FGFuncFft(const double* const h_arr, long nrow,
-                 const int* const index_arr, // nrow
+                 const long* const index_arr, // nrow
                  const double* const x_arr, long ncol,
                  double delta_freq,
                  double lambda)
@@ -153,7 +153,7 @@ double FGFuncFft(const double* const h_arr, long nrow,
 }
 
 double GetLconstFft(const double* const h_arr, long nrow,
-                    const int* const index_arr, // nrow
+                    const long* const index_arr, // nrow
                     const double* const x_arr, long ncol,
                     double delta_freq,
                     double lconst,
@@ -197,7 +197,7 @@ double GetLconstFft(const double* const h_arr, long nrow,
 
 
 void AxFft(const double* const x_arr, long ncol, 
-           const int* const index_arr, long nrow,
+           const long* const index_arr, long nrow,
            double delta_freq,
            double* const out_arr) // nrow
 
@@ -223,6 +223,7 @@ void AxFft(const double* const x_arr, long ncol,
     for(long ibin = 0; ibin < nrow; ibin ++){
         out_arr[ibin] = 2 * delta_freq * out_real_arr[index_arr[ibin]];
     }
+
     delete [] real_arr;
     delete [] image_arr;
     delete [] out_real_arr;
@@ -231,7 +232,7 @@ void AxFft(const double* const x_arr, long ncol,
 }
 
 void ATyFft(const double* const y_arr, long nrow, 
-            const int* const index_arr, // nrow
+            const long* const index_arr, // nrow
             double delta_freq,
             long ncol,
             double* const out_arr) // ncol
