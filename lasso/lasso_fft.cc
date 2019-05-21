@@ -245,6 +245,26 @@ int main(int argc, char* argv[]){
     }
     fclose(fp);
 
+
+    
+    double* rec2_arr = new double [nrow];
+    for(long irow = 0; irow < nrow; irow ++){
+        rec2_arr[irow] = 0.0;
+    }
+    AxFft(x_arr, ncol,
+          index_arr,
+          nrow,
+          delta_freq,
+          rec2_arr);
+    
+    FILE* fp_compare = fopen("compare_orglc_rec.qdp", "w");
+    fprintf(fp_compare, "skip sing\n");
+    for(long idata = 0; idata < gd2d_lc->GetNdata(); idata ++){
+        fprintf(fp_compare, "%e  %e  %e\n",
+                gd2d_lc->GetXvalElm(idata), gd2d_lc->GetOvalElm(idata),
+                rec2_arr[idata]);
+    }
+    fclose(fp_compare);
     
     
     delete argval;

@@ -401,7 +401,33 @@ int main(int argc, char* argv[]){
                 freq_up_fft,
                 lambda_best,
                 x_best_arr);
-    
+
+    /////////////
+    double* reconst_best_arr = new double [nrow];
+    AxFft(x_best_arr, ncol,
+          index_arr,
+          nrow,
+          delta_freq,
+          reconst_best_arr);
+
+    FILE* fp_out = fopen("compare_best.qdp", "w");
+    fprintf(fp_out, "skip sing\n");
+    fprintf(fp_out, "\n");
+    for(long ibin = 0; ibin < nrow; ibin ++){
+        fprintf(fp_out, "%e  %e\n",
+                hd1d_lc->GetHi1d()->GetBinCenter( index_arr[ibin] ),
+                reconst_best_arr[ibin]);
+    }
+    fprintf(fp_out, "\n");
+    fprintf(fp_out, "no\n");
+    fprintf(fp_out, "\n");
+    for(long ibin = 0; ibin < ntime; ibin ++){
+        fprintf(fp_out, "%e  %e\n",
+                gd2d_lc->GetXvalElm(ibin),
+                gd2d_lc->GetOvalElm(ibin));
+    }
+    fclose(fp_out);
+
 
     double time_ed = MiTime::GetTimeSec();
     double calc_time = time_ed - time_st;

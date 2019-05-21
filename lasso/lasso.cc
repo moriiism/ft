@@ -242,7 +242,26 @@ int main(int argc, char* argv[]){
     }
     fclose(fp);
 
-    
+    // check light curve
+    // rec_arr = A.mat %*% x_arr
+    double* rec_arr = new double[nrow];
+    for(long irow = 0; irow < nrow; irow ++){
+        rec_arr[irow] = 0.0;
+    }
+    char* trans = new char [1];
+    strcpy(trans, "N");
+    dgemv_(trans, nrow, ncol, 1.0, const_cast<double*>(A_mat_arr), nrow,
+           const_cast<double*>(x_arr), 1,
+           0.0, rec_arr, 1);
+    delete [] trans;
+
+    FILE* fp_compare = fopen("compare_orglc_rec.qdp", "w");
+    fprintf(fp_compare, "skip sing\n");
+    for(long idata = 0; idata < gd2d_lc->GetNdata(); idata ++){
+        fprintf(fp_compare, "%e  %e  %e \n",
+                gd2d_lc->GetXvalElm(idata), gd2d_lc->GetOvalElm(idata), rec_arr[idata]);
+    }        
+    fclose(fp_compare);
     
     delete argval;
     

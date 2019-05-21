@@ -68,6 +68,8 @@ void GenMatLasso(const double* const time_arr, long ntime,
 {
     long nrow = ntime;
     long ncol = 2 * nfreq;
+
+    printf("nrow = %ld, ncol = %ld\n", nrow, ncol);
     
     // lasso
     // matrix
